@@ -204,7 +204,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
         destination = str(row["destination"])
         source_hash = _stable_hash(source)
         previous = existing_status.get(destination)
-        previous_uploaded = previous and previous.get("upload_status") == "uploaded"
+        previous_uploaded = bool(previous) and previous.get("upload_status") == "uploaded"
         local_exists = Path(destination).exists()
 
         if (
