@@ -16,6 +16,7 @@ from .submission import generate_metadata_file_record, write_submission_csv
 from .utils import md5_checksum
 
 REQUIRED_MANIFEST_COLUMNS = {"location", "rid", "specnum_formatted", "stain"}
+EXPECTED_SVS_DEID_REMOTE = "https://github.com/pearcetm/svs-deidentifier"
 
 
 def configure_logging(out_dir: Path, log_level: str) -> None:
@@ -27,6 +28,32 @@ def configure_logging(out_dir: Path, log_level: str) -> None:
         format="[%(asctime)s] %(levelname)s %(name)s: %(message)s",
         handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
     )
+
+
+def _check_svs_deidentifier_submodule() -> None:
+    repo_root = Path.cwd()
+    candidates = [
+        repo_root / "svs-deidentifier",
+        repo_root / "svs_deid_pipeline" / "svs-deidentifier",
+    ]
+    submodule_path = next((p for p in candidates if p.exists()), None)
+    if not submodule_path:
+        raise FileNotFoundError(
+            "svs-deidentifier submodule not found. "
+            "Expected at ./svs-deidentifier or ./svs_deid_pipeline/svs-deidentifier."
+        )
+    gitmodules_candidates = [
+        repo_root / ".gitmodules",
+        repo_root / "svs_deid_pipeline" / ".gitmodules",
+    ]
+    for gitmodules in gitmodules_candidates:
+        if gitmodules.exists():
+            contents = gitmodules.read_text(encoding="utf-8")
+            if EXPECTED_SVS_DEID_REMOTE not in contents:
+                raise ValueError(
+                    "svs-deidentifier submodule URL does not match expected upstream."
+                )
+            break
 
 
 def read_manifest(path: Path) -> pd.DataFrame:
@@ -131,6 +158,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
     logger = logging.getLogger("svs_deid_pipeline")
 
     logger.info("Starting pipeline.")
+    _check_svs_deidentifier_submodule()
     if not config.keep_local and not config.s3_bucket and not config.dry_run:
         raise ValueError("keep_local=False requires --s3-bucket for offloading outputs.")
     manifest_df = read_manifest(config.manifest)

@@ -13,7 +13,7 @@ Pipeline for de-identifying SVS files from a manifest CSV with optional S3 uploa
 
 ## Venv + Installation
 
-This repo contains the pipeline package. It also depends on the upstream de-identification approach from `svs-deidentifier`:
+This repo contains the pipeline package. It also depends on the upstream de-identification approach from `svs-deidentifier`.
 
 - Upstream project: https://github.com/pearcetm/svs-deidentifier
 - This pipeline uses the same `source`/`destination` CSV contract and copy+strip behavior.
@@ -28,7 +28,7 @@ pip install -e .
 
 ### Link `svs-deidentifier` in your repo (recommended)
 
-Add it as a submodule from the repo root:
+Add it as a submodule inside this repo (so the path is `svs_deid_pipeline/svs-deidentifier`):
 
 ```
 git submodule add https://github.com/pearcetm/svs-deidentifier svs-deidentifier
@@ -37,7 +37,7 @@ git submodule update --init --recursive
 
 If you prefer not to use submodules, clone it next to your repo and keep it as a sibling folder.
 
-## Example input spreadsheet
+## Example input CSV
 
 See `examples/example_manifest.csv` for a template (do not commit SVS files or PHI).
 
@@ -69,13 +69,13 @@ data/70276.svs,RID0002,SPEC0002,
 ## Run locally (dry-run)
 
 ```
-svs_deid run --manifest ../examples/example_manifest.csv --out ./out --dry-run
+svs_deid run --manifest examples/example_manifest.csv --out ./out --dry-run
 ```
 
 ## Run locally (de-identify + submission)
 
 ```
-svs_deid run --manifest ../examples/example_manifest.csv --out ./out
+svs_deid run --manifest examples/example_manifest.csv --out ./out
 ```
 
 ## Run with S3
@@ -87,13 +87,13 @@ svs_deid run --manifest ../test_mani.csv --out ./out --s3-bucket my-bucket --s3-
 ## Upload-only storage (no local SVS retention)
 
 ```
-svs_deid run --manifest ../examples/example_manifest.csv --out ./out --s3-bucket my-bucket --s3-prefix runs/001 --no-local
+svs_deid run --manifest examples/example_manifest.csv --out ./out --s3-bucket my-bucket --s3-prefix runs/001 --no-local
 ```
 
 ## Resume a partial run
 
 ```
-svs_deid run --manifest ../examples/example_manifest.csv --out ./out --resume
+svs_deid run --manifest examples/example_manifest.csv --out ./out --resume
 ```
 
 ## Configuration (env vars)
