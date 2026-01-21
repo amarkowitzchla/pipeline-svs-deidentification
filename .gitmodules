@@ -1,0 +1,3 @@
+[submodule "svs-deidentifier"]
+	path = svs-deidentifier
+	url = https://github.com/pearcetm/svs-deidentifier
