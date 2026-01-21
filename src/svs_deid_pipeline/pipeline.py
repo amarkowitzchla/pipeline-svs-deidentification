@@ -204,10 +204,37 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
         destination = str(row["destination"])
         source_hash = _stable_hash(source)
         previous = existing_status.get(destination)
+        previous_uploaded = previous and previous.get("upload_status") == "uploaded"
+        local_exists = Path(destination).exists()
 
-        if previous and previous.get("status") == "success" and previous.get("upload_status") == "uploaded":
-            status_rows.append(previous)
+        if (
+            config.resume
+            and config.s3_bucket
+            and destination in s3_manifest_index
+            and not local_exists
+            and not previous
+        ):
+            status_rows.append(
+                {
+                    "destination": destination,
+                    "source_hash": source_hash,
+                    "status": "success",
+                    "error": "",
+                    "md5": "",
+                    "upload_status": "uploaded",
+                    "s3_uri": s3_manifest_index[destination]["s3_uri"],
+                    "local_deleted": "yes",
+                }
+            )
             continue
+
+        if previous and previous.get("status") == "success":
+            if config.s3_bucket and previous_uploaded:
+                status_rows.append(previous)
+                continue
+            if not config.s3_bucket and local_exists:
+                status_rows.append(previous)
+                continue
 
         if previous and previous.get("status") == "success":
             result = {
