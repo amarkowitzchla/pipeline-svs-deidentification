@@ -48,6 +48,7 @@ def _read_env(env: Mapping[str, str]) -> dict[str, Any]:
         "fail_fast": _parse_bool(env.get("SVS_DEID_FAIL_FAST")),
         "resume": _parse_bool(env.get("SVS_DEID_RESUME")),
         "keep_local": _parse_bool(env.get("SVS_DEID_KEEP_LOCAL")),
+        "max_files": env.get("SVS_DEID_MAX_FILES"),
     }
 
 
@@ -66,6 +67,7 @@ class PipelineConfig:
     fail_fast: bool = False
     resume: bool = False
     keep_local: bool = True
+    max_files: int | None = None
     config_path: Path | None = None
 
     def validate(self) -> None:
@@ -93,6 +95,7 @@ def load_config(
     fail_fast: bool | None = None,
     resume: bool | None = None,
     keep_local: bool | None = None,
+    max_files: int | None = None,
     env: Mapping[str, str] | None = None,
 ) -> PipelineConfig:
     env_data = _read_env(env or os.environ)
@@ -119,6 +122,7 @@ def load_config(
         "fail_fast": fail_fast,
         "resume": resume,
         "keep_local": keep_local,
+        "max_files": max_files,
     }
     merged.update({k: v for k, v in cli_values.items() if v not in (None, "")})
 
@@ -139,6 +143,7 @@ def load_config(
         fail_fast=bool(merged.get("fail_fast") or False),
         resume=bool(merged.get("resume") or False),
         keep_local=keep_local_value,
+        max_files=int(merged.get("max_files")) if merged.get("max_files") not in (None, "") else None,
         config_path=config_path_obj,
     )
     config.validate()

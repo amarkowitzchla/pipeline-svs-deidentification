@@ -78,6 +78,13 @@ svs_deid run --manifest examples/example_manifest.csv --out ./out --dry-run
 svs_deid run --manifest examples/example_manifest.csv --out ./out
 ```
 
+## Run a partial batch (for resume testing)
+
+```
+svs_deid run --manifest examples/example_manifest.csv --out ./out --max-files 1
+svs_deid run --manifest examples/example_manifest.csv --out ./out --resume
+```
+
 ## Run with S3
 
 ```

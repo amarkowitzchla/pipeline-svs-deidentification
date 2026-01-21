@@ -25,6 +25,7 @@ def run_command(
     fail_fast: bool = typer.Option(False, "--fail-fast"),
     resume: bool = typer.Option(False, "--resume"),
     keep_local: bool = typer.Option(True, "--keep-local/--no-local"),
+    max_files: int | None = typer.Option(None, "--max-files", min=1),
     log_level: str | None = typer.Option(None, "--log-level"),
 ) -> None:
     config_obj = load_config(
@@ -39,6 +40,7 @@ def run_command(
         fail_fast=fail_fast,
         resume=resume,
         keep_local=keep_local,
+        max_files=max_files,
         log_level=log_level,
     )
     outputs = run_pipeline(config_obj)

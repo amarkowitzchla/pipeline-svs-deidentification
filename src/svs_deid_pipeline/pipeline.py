@@ -119,6 +119,7 @@ def write_run_journal(config: PipelineConfig, out_dir: Path, counts: dict[str, i
         "dry_run": config.dry_run,
         "resume": config.resume,
         "keep_local": config.keep_local,
+        "max_files": config.max_files,
         "workers": config.workers,
         "s3_bucket": config.s3_bucket,
         "s3_prefix": config.s3_prefix,
@@ -196,6 +197,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
     s3_manifest_rows = _load_existing_s3_manifest(out_dir) if config.resume else []
     s3_manifest_index = {row.get("local_path"): row for row in s3_manifest_rows}
     submission_records: list[dict[str, str]] = []
+    processed_count = 0
 
     manifest_lookup = {str(row["location"]): row for _, row in manifest_df.iterrows()}
 
@@ -204,7 +206,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
         destination = str(row["destination"])
         source_hash = _stable_hash(source)
         previous = existing_status.get(destination)
-        previous_uploaded = bool(previous) and previous.get("upload_status") == "uploaded"
+        previous_uploaded = (previous is not None) and previous.get("upload_status") == "uploaded"
         local_exists = Path(destination).exists()
 
         if (
@@ -236,6 +238,9 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
                 status_rows.append(previous)
                 continue
 
+        if config.max_files is not None and processed_count >= config.max_files:
+            continue
+
         if previous and previous.get("status") == "success":
             result = {
                 "destination": destination,
@@ -244,6 +249,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
             }
         else:
             result = deidentify_one(source, destination, fail_fast=config.fail_fast)
+            processed_count += 1
 
         result_destination = result["destination"]
 
