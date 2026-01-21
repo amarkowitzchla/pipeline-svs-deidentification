@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "svs-deid-pipeline"
+version = "0.1.0"
+description = "SVS de-identification pipeline with manifest-driven processing."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pandas",
+  "tifffile",
+  "tqdm",
+  "openslide-python",
+  "openslide-bin; platform_system != 'Windows'",
+  "boto3",
+  "pyyaml",
+  "typer",
+  "rich",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "moto[s3]",
+  "ruff",
+  "mypy",
+]
+
+[project.scripts]
+svs_deid = "svs_deid_pipeline.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
