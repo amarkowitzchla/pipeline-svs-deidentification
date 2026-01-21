@@ -216,6 +216,8 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
             and not local_exists
             and not previous
         ):
+            # ! I expect this will also throw a dtype error when resuming with s3
+            # ! will leave for now
             status_rows.append(
                 {
                     "destination": destination,
@@ -230,7 +232,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
             )
             continue
 
-        if previous and previous.get("status") == "success":
+        if (previous is not None) and previous.get("status") == "success":
             if config.s3_bucket and previous_uploaded:
                 status_rows.append(previous)
                 continue
@@ -241,7 +243,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
         if config.max_files is not None and processed_count >= config.max_files:
             continue
 
-        if previous and previous.get("status") == "success":
+        if (previous is not None) and previous.get("status") == "success":
             result = {
                 "destination": destination,
                 "status": "success",
@@ -296,7 +298,7 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
             Path(result_destination).unlink(missing_ok=True)
             local_deleted = "yes"
 
-        status_row = {
+        status_row = pd.Series({
             "destination": result_destination,
             "source_hash": source_hash,
             "status": result["status"],
@@ -305,8 +307,17 @@ def run_pipeline(config: PipelineConfig) -> dict[str, Path]:
             "upload_status": upload_status,
             "s3_uri": s3_uri,
             "local_deleted": local_deleted,
-        }
-        status_rows.append(status_row)
+        })
+        # ! assuming we can change append on s3 resuming to series from dict,
+        # ! can consider changing status_rows type_hint to series. Ignoring 
+        # ! type error/warning for now though 
+        status_rows.append(status_row) # type: ignore
+
+        logger.info('iterating through status_rows')
+        for v in status_rows:
+            logger.info(f'status rows ({type(v)}) = {v}')
+        
+        
         write_status_csv(status_rows, out_dir)
         if s3_manifest_rows:
             write_s3_manifest(out_dir, s3_manifest_rows)
