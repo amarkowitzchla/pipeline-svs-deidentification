@@ -95,6 +95,8 @@ svs_deid run --manifest ../test_mani.csv --out ./out --s3-bucket my-bucket --s3-
 
 ```
 svs_deid run --manifest examples/example_manifest.csv --out ./out --s3-bucket my-bucket --s3-prefix runs/001 --no-local
+svs_deid run --manifest ~/Desktop/deid_test/svs-deid-mani.csv --out ./out --s3-bucket cpmpublic --s3-prefix ccdi/test_run/ --no-local
+
 ```
 
 ## Resume a partial run
@@ -129,18 +131,21 @@ pytest -m "not integration"
 ## Input/Output Contract
 
 Manifest CSV columns (required):
+
 - `location`
 - `rid`
 - `specnum_formatted`
 - `stain`
 
 Derived CSV:
+
 - `source`
 - `destination`
 
 The derived CSV matches the `svs-deidentifier` expected format (per its README).
 
 Outputs (per run):
+
 - `out/derived/source_destination.csv`
 - `out/status/status.csv`
 - `out/run.json`
