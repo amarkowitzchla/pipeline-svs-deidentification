@@ -2,7 +2,6 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 import pandas as pd
 
@@ -12,51 +11,69 @@ from .utils import md5_checksum, load_esm_data
 
 logger = logging.getLogger('idcprep')
 
-
-@dataclass
-class CCDIPathologyFileConstants:
-    type:str='pathology_file'
-    file_type:str='svs'
-    file_mapping_level:str='sample'
-    image_modality:str='Slide Microscopy'
-    file_description:str='SVS formatted file of H&E-stained WSI'
-    license:str='NA'
-    deidentification_method:str='automatic'
-    fixation_embedding_method:str='Formalin fixed paraffin embedded (FFPE)'
-
-    def get_values(self):
-        return self.__dict__
     
+@dataclass
+class CCDIPathologyMetadataFile:
+    SUBMISSION_TEMPLATE_TYPE:str = 'ccdi-dcc'
+    SUBMISSION_TEMPLATE_VERSION:str = "1.0.0"
+    type: str = "pathology_file"
+    sample_id: str = ""
+    pathology_file_id: str = ""
+    file_name: str = ""
+    data_category: str = "Pathology Imaging"
+    file_type: str = "svs"
+    file_description:str = ""            # optional, not used -- exists for compatibility
+    file_size: int = 0
+    md5sum: str = ""
+    file_mapping_level: str = "sample"
+    file_access : str = "Open"
+    acl: str = ""                        # not required if file_access=Open
+    authz: str = "['/open']"
+    file_url: str = ""
+    dcf_indexd_guid: str = ""
+    image_modality: str = "Slide Microscopy"
+    license: str = "CC by 4.0"           # Arbitrarily set for now
+    magnification: str|float = ""
+    fixation_embedding_method: str = "Formalin fixed paraffin embedded (FFPE)"
+    staining_method:str = ""
+    deidentification_method:str = "automatic"
+    slim_url:str = ""                    # optional, not used -- exists for compatibility
+    crdc_rd:str = ""                     # optional, not used -- exists for compatibility
+    guid:str = ""                        # optional, not used -- exists for compatibility
+    sample_guid:str = ""                 # optional, not used -- exists for compatibility
 
-def _compare_metadata_headers(required:Iterable[str], current:Iterable[str]) -> tuple[list[str], int]:
-    """ Compares collected metadata headers to whats needed 
+    def __repr__(self):
+        return f'{self.SUBMISSION_TEMPLATE_TYPE} v{self.SUBMISSION_TEMPLATE_VERSION} submission template for {self.sample_id or self.pathology_file_id}'
 
-        Parameters
-        ----------
-        required : Iterable[str]
-            All metadata column headers in the CCDI submission template
+    def get_template_metadata(self):
+        """View submission template type and version"""
+        return {i:j for i,j in self.__dict__.items() if i.startswith('SUBMISSION_TEMPLATE_')}
 
-        current : Iterable[str]
-            All metadata column headers that have been collected, or of interest
-            for comparison
-
-        Returns
-        -------
-            missing_headers : list[str]
-                Remaining headers needed for collection
-
-            n : int
-                Number of remaining headers needed for collection
-    """
-    missing = [h for h in required if h not in current]
-    extra = [h for h in current if h not in required]
-
-    if len(extra) > 0:
-        logger.warning(f'\tIdentified {len(extra)} metadata values not found in requirements: {extra}')
+    def update_record(self, data:dict):
+        valid_keys = set(self.__dict__.keys())
+        proposed_keys = set(data.keys())
+        difference = proposed_keys.difference(valid_keys)
         
+        assert len(difference) == 0, f'Supplying invalid keys: {sorted(difference)}'
+        self.__dict__.update(data)
+        return
 
-    return missing, len(missing)
-
+    def get_formatted_record(self):
+        """ Get the values used for submission and formats the sample_id 
+            header while maintaining key-value pair order
+        """        
+        formatted = {}
+        for i,j in self.__dict__.items():
+            # ignore metadata values
+            if i.startswith('SUBMISSION_TEMPLATE_'):
+                continue
+            # unfortunately, only sample_id requires formatting due to dot format
+            elif i == 'sample_id':
+                formatted[f'sample.{i}'] = j
+            else:
+                formatted[i] = j
+        
+        return formatted
 
 def generate_metadata_file_record(
     initial_info: pd.Series,
@@ -70,10 +87,11 @@ def generate_metadata_file_record(
         Parameters
         ----------
             initial_info : pd.Series
-                Known information from initial spreadsheet. Specifically, we need:
+                Known information from manifest spreadsheet. Specifically, we need:
                 * `rid` : used for sample ID
-                * `specimen_id` : used to compare against ESM data to get extra info
-                                  e.g., stain
+                * `specnum_formatted` : specimen ID used to compare against ESM data to 
+                                        get extra info (e.g., stain). Only used if 
+                                        `esm_export_dir` is provided.
                 * `stain` : used if available
                 * `file location` : used to map to ESM data, which uses original location
 
@@ -98,29 +116,23 @@ def generate_metadata_file_record(
     slide = OpenSlide(updated_location)
     file_image_id = slide.properties['aperio.Filename'] # post metadata deid, this should match image ID
 
-    # starting point of record formation
-    record = {
+    # initialize single row of the CCDI-DCC (v1.0.0) metadata template
+    # with hardcoded constants
+    record = CCDIPathologyMetadataFile()
+    record.update_record({
         'pathology_file_id': file_image_id,
-        'file_url_in_cds': updated_location,
+        'file_url': updated_location,
         'staining_method': initial_info['stain'],
-        'sample.sample_id': initial_info['rid'],
-        'file_name': f'{file_image_id}.svs'
-    }
-
-    # update with hard coded info across records
-    record |= CCDIPathologyFileConstants().get_values()
-
-    # update with info collected from file directory 
-    record |= {
+        'sample_id': initial_info['sample_id'],
+        'file_name': f'{file_image_id}.svs',
         'file_size': os.path.getsize(updated_location),
         'md5sum': md5_checksum(updated_location),
         'magnification': slide.properties['aperio.AppMag']
-    }
+    })
 
+    logger.info(f'Created record with {record}')
 
-    logger.info(f'Created record with {len(record)} elements')
-
-    return record
+    return record.get_formatted_record()
 
 
 def build_submission_dataframe(

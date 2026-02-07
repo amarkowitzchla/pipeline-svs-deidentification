@@ -76,6 +76,7 @@ svs_deid run --manifest examples/example_manifest.csv --out ./out --dry-run
 
 ```
 svs_deid run --manifest examples/example_manifest.csv --out ./out
+svs_deid run --manifest ~/Desktop/svs-deid/test-svs-deid-mani.csv --out ./out
 ```
 
 ## Run a partial batch (for resume testing)
@@ -95,7 +96,7 @@ svs_deid run --manifest ../test_mani.csv --out ./out --s3-bucket my-bucket --s3-
 
 ```
 svs_deid run --manifest examples/example_manifest.csv --out ./out --s3-bucket my-bucket --s3-prefix runs/001 --no-local
-svs_deid run --manifest ~/Desktop/deid_test/svs-deid-mani.csv --out ./out --s3-bucket cpmpublic --s3-prefix ccdi/test_run/ --no-local
+svs_deid run --manifest ~/Desktop/svs-deid/test-svs-deid-mani.csv --out ./out --s3-bucket cpmpublic --s3-prefix ccdi/test_run/ --no-local
 
 ```
 
