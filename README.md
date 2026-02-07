@@ -44,22 +44,22 @@ See `examples/example_manifest.csv` for a template (do not commit SVS files or P
 Example manifest CSV (required columns):
 
 ```
-location,rid,specnum_formatted,stain
-/path/to/slide1.svs,RID0001,SPEC0001,H&E
-/path/to/slide2.svs,RID0002,SPEC0002,CD3
+location,sample_id,specnum_formatted,stain
+/path/to/slide1.svs,SID0001,SPEC0001,H&E
+/path/to/slide2.svs,SID0002,SPEC0002,CD3
 ```
 
 You may use relative paths; they are resolved from the current working directory or the manifest location:
 
 ```
-location,rid,specnum_formatted,stain
-data/70275.svs,RID0001,SPEC0001,H&E
-data/70276.svs,RID0002,SPEC0002,
+location,sample_id,specnum_formatted,stain
+data/70275.svs,SID0001,SPEC0001,H&E
+data/70276.svs,SID0002,SPEC0002
 ```
 
 ## How it works (implementation overview)
 
-1. Read the manifest CSV (`location`, `rid`, `specnum_formatted`, `stain`).
+1. Read the manifest CSV (`location`, `sample_id`, `specnum_formatted`, `stain`).
 2. Create a derived `source/destination` CSV for `svs-deidentifier`.
 3. De-identify each SVS in copy mode (label + macro removed).
 4. Optionally upload each de-identified SVS to S3.

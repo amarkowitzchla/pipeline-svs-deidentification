@@ -88,7 +88,7 @@ def generate_metadata_file_record(
         ----------
             initial_info : pd.Series
                 Known information from manifest spreadsheet. Specifically, we need:
-                * `rid` : used for sample ID
+                * `sample_id` : used for sample.sample_id
                 * `specnum_formatted` : specimen ID used to compare against ESM data to 
                                         get extra info (e.g., stain). Only used if 
                                         `esm_export_dir` is provided.
