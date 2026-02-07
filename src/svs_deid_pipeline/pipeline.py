@@ -15,7 +15,7 @@ from .s3 import upload_file_to_s3
 from .submission import generate_metadata_file_record, write_submission_csv
 from .utils import md5_checksum
 
-REQUIRED_MANIFEST_COLUMNS = {"location", "rid", "specnum_formatted", "stain"}
+REQUIRED_MANIFEST_COLUMNS = {"location", "rid", "specnum_formatted", "stain", "sample_id"}
 EXPECTED_SVS_DEID_REMOTE = "https://github.com/pearcetm/svs-deidentifier"
 
 
