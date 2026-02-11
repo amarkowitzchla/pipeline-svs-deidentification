@@ -44,22 +44,22 @@ See `examples/example_manifest.csv` for a template (do not commit SVS files or P
 Example manifest CSV (required columns):
 
 ```
-location,rid,specnum_formatted,stain
-/path/to/slide1.svs,RID0001,SPEC0001,H&E
-/path/to/slide2.svs,RID0002,SPEC0002,CD3
+location,sample_id,specnum_formatted,stain
+/path/to/slide1.svs,SID0001,SPEC0001,H&E
+/path/to/slide2.svs,SID0002,SPEC0002,CD3
 ```
 
 You may use relative paths; they are resolved from the current working directory or the manifest location:
 
 ```
-location,rid,specnum_formatted,stain
-data/70275.svs,RID0001,SPEC0001,H&E
-data/70276.svs,RID0002,SPEC0002,
+location,sample_id,specnum_formatted,stain
+data/70275.svs,SID0001,SPEC0001,H&E
+data/70276.svs,SID0002,SPEC0002
 ```
 
 ## How it works (implementation overview)
 
-1. Read the manifest CSV (`location`, `rid`, `specnum_formatted`, `stain`).
+1. Read the manifest CSV (`location`, `sample_id`, `specnum_formatted`, `stain`).
 2. Create a derived `source/destination` CSV for `svs-deidentifier`.
 3. De-identify each SVS in copy mode (label + macro removed).
 4. Optionally upload each de-identified SVS to S3.
@@ -76,6 +76,7 @@ svs_deid run --manifest examples/example_manifest.csv --out ./out --dry-run
 
 ```
 svs_deid run --manifest examples/example_manifest.csv --out ./out
+svs_deid run --manifest ~/Desktop/svs-deid/test-svs-deid-mani.csv --out ./out
 ```
 
 ## Run a partial batch (for resume testing)
@@ -95,6 +96,8 @@ svs_deid run --manifest ../test_mani.csv --out ./out --s3-bucket my-bucket --s3-
 
 ```
 svs_deid run --manifest examples/example_manifest.csv --out ./out --s3-bucket my-bucket --s3-prefix runs/001 --no-local
+svs_deid run --manifest ~/Desktop/svs-deid/test-svs-deid-mani.csv --out ./out --s3-bucket cpmpublic --s3-prefix ccdi/test_run/ --no-local
+
 ```
 
 ## Resume a partial run
@@ -129,18 +132,21 @@ pytest -m "not integration"
 ## Input/Output Contract
 
 Manifest CSV columns (required):
+
 - `location`
 - `rid`
 - `specnum_formatted`
 - `stain`
 
 Derived CSV:
+
 - `source`
 - `destination`
 
 The derived CSV matches the `svs-deidentifier` expected format (per its README).
 
 Outputs (per run):
+
 - `out/derived/source_destination.csv`
 - `out/status/status.csv`
 - `out/run.json`
